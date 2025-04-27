@@ -8,6 +8,7 @@
 import Cocoa
 import AVKit
 import AVFoundation
+import Quartz
 
 class CustomCollectionViewItem: NSCollectionViewItem {
     
@@ -25,6 +26,9 @@ class CustomCollectionViewItem: NSCollectionViewItem {
     
     var folderViews=[NSView]()
     var folderImageViews=[CustomImageView]()
+    
+    var quickLookView: CustomQLPreviewView!
+    var dummyView: NSView!
     
     var file = FileModel(path: "", ver: 0)
     private var mouseDownLocation: NSPoint? = nil
@@ -85,6 +89,18 @@ class CustomCollectionViewItem: NSCollectionViewItem {
         videoView.wantsLayer = true
         videoView.layer?.cornerRadius = 5.0
         videoView.layer?.addSublayer(avPlayerLayer!)
+        
+        quickLookView = CustomQLPreviewView(frame: videoView.bounds, style: .normal)
+        quickLookView?.autostarts = true
+        quickLookView?.isHidden = true
+        quickLookView?.wantsLayer = true
+        videoView.addSubview(quickLookView!)
+        
+        // CustomQLPreviewView can handle mouseDown events, but it is very slow to respond.
+        // So, I added a dummy NSView in front.
+        dummyView = NSView(frame: videoView.bounds)
+        dummyView?.wantsLayer = true
+        videoView.addSubview(dummyView)
         
 //        for _ in 0...0 {
 //            // 父视图 - 用于阴影和边框
@@ -242,54 +258,67 @@ class CustomCollectionViewItem: NSCollectionViewItem {
             playVideo()
         }
         
-        if(playAnimation){
-            NSAnimationContext.runAnimationGroup({ context in
-                // 设置动画持续时间秒
-                context.duration = 0.1
-                
-                // 使用Core Animation的crossfade效果
-                imageViewObj.wantsLayer = true // 确保imageView使用了CALayer
-                let transition = CATransition()
-                transition.type = CATransitionType.fade
-                transition.duration = context.duration
-                imageViewObj.layer?.add(transition, forKey: kCATransition)
-                
-                // 设置新图像
-                imageViewObj.image = file.image
-                //imageViewObj.sd_setImage(with: URL(string: path), placeholderImage: nil)
-                
-//                if file.folderImages.count>0{
-//                    folderViews[0].isHidden=false
-//                    folderImageViews[0].image=file.folderImages[0]
-//                }else{
-//                    folderViews[0].isHidden=true
-//                    folderImageViews[0].image=nil
-//                }
+        let url = URL(string:file.path)!
+        let fileSize: Int = file.fileSize ?? -1
 
-            }, completionHandler: {
-                // 动画完成后的操作（如果有）
-            })
-        }else{
-            if file.image != nil {
-                imageViewObj.image=file.image
-            }else{
-                if file.isDir {
-                    imageViewObj.image=NSImage(named: NSImage.folderName)
-                }else{
-                    imageViewObj.image=nil
-                }
-            }
+        if globalVar.HandledAnimatedImageExtensions.contains(url.pathExtension.lowercased()) &&
+            // FIXME: Having a large number of high-resolution animated images can significantly degrade the application's performance.
+            fileSize < 500 * 1024 {
+            imageViewObj.isHidden = true
+            quickLookView.isHidden = false
             
-//            if file.folderImages.count>0{
-//                folderViews[0].isHidden=false
-//                folderImageViews[0].image=file.folderImages[0]
-//            }else{
-//                folderViews[0].isHidden=true
-//                folderImageViews[0].image=nil
-//            }
+            quickLookView?.previewItem = url as QLPreviewItem
+        } else {
+            imageViewObj.isHidden = false
+            quickLookView?.isHidden = true
+            
+            if(playAnimation){
+                NSAnimationContext.runAnimationGroup({ context in
+                    // 设置动画持续时间秒
+                    context.duration = 0.1
+                    
+                    // 使用Core Animation的crossfade效果
+                    imageViewObj.wantsLayer = true // 确保imageView使用了CALayer
+                    let transition = CATransition()
+                    transition.type = CATransitionType.fade
+                    transition.duration = context.duration
+                    imageViewObj.layer?.add(transition, forKey: kCATransition)
+                    
+                    // 设置新图像
+                    imageViewObj.image = file.image
+                    //imageViewObj.sd_setImage(with: URL(string: path), placeholderImage: nil)
+                    
+    //                if file.folderImages.count>0{
+    //                    folderViews[0].isHidden=false
+    //                    folderImageViews[0].image=file.folderImages[0]
+    //                }else{
+    //                    folderViews[0].isHidden=true
+    //                    folderImageViews[0].image=nil
+    //                }
+
+                }, completionHandler: {
+                    // 动画完成后的操作（如果有）
+                })
+            }else{
+                if file.image != nil {
+                    imageViewObj.image=file.image
+                }else{
+                    if file.isDir {
+                        imageViewObj.image=NSImage(named: NSImage.folderName)
+                    }else{
+                        imageViewObj.image=nil
+                    }
+                }
+                
+    //            if file.folderImages.count>0{
+    //                folderViews[0].isHidden=false
+    //                folderImageViews[0].image=file.folderImages[0]
+    //            }else{
+    //                folderViews[0].isHidden=true
+    //                folderImageViews[0].image=nil
+    //            }
+            }
         }
-        
-        
     }
     
     func setTooltip(){

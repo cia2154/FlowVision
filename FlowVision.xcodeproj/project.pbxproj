@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		CE4843E22DBDFECA00A1F3D2 /* CustomQLPreviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE4843E12DBDFEC900A1F3D2 /* CustomQLPreviewView.swift */; };
 		F70368E82BF609F300155F36 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F70368E72BF609F300155F36 /* Localizable.xcstrings */; };
 		F70F9FC12BAFE7B300C50CDD /* Common.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70F9FC02BAFE7B300C50CDD /* Common.swift */; };
 		F70F9FC32BAFE85D00C50CDD /* CustomCollectionViewManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F70F9FC22BAFE85D00C50CDD /* CustomCollectionViewManager.swift */; };
@@ -87,6 +88,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		CE4843E12DBDFEC900A1F3D2 /* CustomQLPreviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomQLPreviewView.swift; sourceTree = "<group>"; };
 		F70368E72BF609F300155F36 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		F70F9FC02BAFE7B300C50CDD /* Common.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Common.swift; sourceTree = "<group>"; };
 		F70F9FC22BAFE85D00C50CDD /* CustomCollectionViewManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomCollectionViewManager.swift; sourceTree = "<group>"; };
@@ -175,6 +177,7 @@
 		F73865E92C37C3EA00837FE4 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				CE4843E12DBDFEC900A1F3D2 /* CustomQLPreviewView.swift */,
 				F7AC30042D37E25800F48AEF /* CustomPathControl.swift */,
 				F7DECD6C2D00938600ECC099 /* CustomEffectView.swift */,
 				F73865DD2C37BEAC00837FE4 /* CoreAreaView.swift */,
@@ -375,6 +378,7 @@
 				F795AC6E2C196B80004B487F /* CustomSplitView.swift in Sources */,
 				F73865D52C37B9B800837FE4 /* Layout.swift in Sources */,
 				F73865D92C37BBCB00837FE4 /* GlobalVariable.swift in Sources */,
+				CE4843E22DBDFECA00A1F3D2 /* CustomQLPreviewView.swift in Sources */,
 				F73865E62C37C1AA00837FE4 /* DrawingView.swift in Sources */,
 				F73865D72C37BB2900837FE4 /* CustomOutlineView.swift in Sources */,
 				F73865E42C37C11B00837FE4 /* ImageProcess.swift in Sources */,

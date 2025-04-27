@@ -9,10 +9,13 @@ import Foundation
 import Cocoa
 import VisionKit
 import AVKit
+import Quartz
 
 class LargeImageView: NSView {
 
     var imageView: CustomLargeImageView!
+    var quickLookView: CustomQLPreviewView!
+    var dummyView: NSView!
     
     var snapshotQueue = [NSView?]()
     var videoView: LargeAVPlayerView!
@@ -90,6 +93,18 @@ class LargeImageView: NSView {
 //        if #available(macOS 13.0, *) {
 //            videoView.allowsVideoFrameAnalysis = false
 //        }
+        
+        quickLookView = CustomQLPreviewView(frame: self.bounds, style: .normal)
+        quickLookView.autostarts = true
+        quickLookView.wantsLayer = true
+        quickLookView.isHidden = true
+        self.addSubview(quickLookView)
+        
+        // CustomQLPreviewView can handle mouseDown events, but it is very slow to response.
+        // So, I added a dummy NSView for a quick exit when the left mouse button is clicked.
+        dummyView = NSView(frame: quickLookView.bounds)
+        dummyView?.wantsLayer = true
+        self.addSubview(dummyView)
         
         exifTextView = ExifTextView(frame: .zero)
         exifTextView.translatesAutoresizingMaskIntoConstraints = false

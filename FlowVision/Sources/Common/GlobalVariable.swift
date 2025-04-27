@@ -76,6 +76,7 @@ class GlobalVar{
     var portableListWidthRatioHH = 0.82
     var portableListHeightRatioHH = 0.84
     
+    var HandledAnimatedImageExtensions: [String] = []
     var HandledImageExtensions: [String] = []
     var HandledRawExtensions: [String] = []
     var HandledImageAndRawExtensions: [String] = []
@@ -89,7 +90,8 @@ class GlobalVar{
     var HandledFolderThumbExtensions: [String] = []
 
     init(){
-        HandledImageExtensions = ["jpg", "jpeg", "jxl", "png", "gif", "bmp", "heif", "heic", "hif", "avif", "tif", "tiff", "webp", "jfif", "jp2", "ai", "psd", "ico", "icns", "svg", "tga"]
+        HandledAnimatedImageExtensions = ["webp"]
+        HandledImageExtensions = HandledAnimatedImageExtensions + ["jpg", "jpeg", "jxl", "png", "gif", "bmp", "heif", "heic", "hif", "avif", "tif", "tiff", "jfif", "jp2", "ai", "psd", "ico", "icns", "svg", "tga"]
         HandledRawExtensions = ["crw", "cr2", "cr3", "nef", "nrw", "arw", "srf", "sr2", "rw2", "orf", "raf", "pef", "dng", "raw", "rwl", "x3f", "3fr", "fff", "iiq", "mos", "dcr", "erf", "mrw", "gpr", "srw"]
         HandledImageAndRawExtensions = HandledImageExtensions + HandledRawExtensions
         HandledNativeSupportedVideoExtensions = ["mp4", "mov", "m2ts", "ts", "mpeg", "mpg", "m4v", "vob"]

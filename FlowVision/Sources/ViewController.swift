@@ -9,6 +9,7 @@ import Foundation
 import Cocoa
 import AVFoundation
 import DiskArbitration
+import Quartz
 
 class CustomProfile: Codable {
     
@@ -1681,6 +1682,8 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
     
     func adjustWindowImageCurrent(){
         var zoomSize=largeImageView.imageView.frame.size
+        // TODO: largeImageView.quickLookView.frame.size ???
+        
         if largeImageView.file.type == .video,
            let originalSize = largeImageView.file.originalSize {
             let rect = AVMakeRect(aspectRatio: originalSize, insideRect: largeImageView.frame)
@@ -1948,6 +1951,7 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
             let newContentSize = NSSize(width: newWidth, height: newHeight)
             
             largeImageView.imageView.frame.size = newContentSize
+            largeImageView.quickLookView.frame.size = newContentSize
             
             // 调整窗口的内容尺寸
             window.setContentSize(newContentSize)
@@ -2017,7 +2021,9 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
             if newWidth > zoomSize.width {
                 newContentSize = zoomSize
             }
+            
             largeImageView.imageView.frame.size = newContentSize
+            largeImageView.quickLookView.frame.size = newContentSize
             
             // 调整窗口的内容尺寸
             window.setContentSize(newContentSize)
@@ -5485,6 +5491,9 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
         //停止播放视频
         largeImageView.stopVideo()
         
+        largeImageView.quickLookView.isHidden = true
+        largeImageView.quickLookView.previewItem = nil
+        
         //隐藏首次使用提示
         coreAreaView.hideInfo()
         globalVar.isFirstTimeUse = false
@@ -6173,6 +6182,7 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
                 let rectView=largeImageView.frame
                 let rectImage=NSRect(origin: CGPoint(x: (rectView.width-largeSize.width)/2, y: (rectView.height-largeSize.height)/2), size: largeSize)
                 largeImageView.imageView.frame=rectImage
+                largeImageView.quickLookView.frame=rectImage
             }
             
             //整数缩放
@@ -6258,75 +6268,79 @@ class ViewController: NSViewController, NSSplitViewDelegate, NSSearchFieldDelega
 
             //判断是否是视频
             if file.type == .image {
+                if globalVar.HandledAnimatedImageExtensions.contains(url.pathExtension.lowercased()) {
+                    largeImageView.imageView.isHidden = true
+                    largeImageView.quickLookView.isHidden = false
+                    largeImageView.quickLookView.previewItem = url as QLPreviewItem
+                } else {
+                    largeImageView.stopVideo()
+                    largeImageView.quickLookView.isHidden = true
+                    largeImageView.imageView.isHidden = false
 
-                largeImageView.stopVideo()
-                largeImageView.imageView.isHidden = false
-
-                if isImageCached {
-                    return
-                }
-                
-                var task: DispatchWorkItem? = nil
-                task = DispatchWorkItem { [weak self] in
-                    guard let self = self else { return }
-                    if pos != currLargeImagePos && !isThisFromFinder {return}
-                    
-                    largeImageLoadQueueLock.lock()
-                    
-                    if task?.isCancelled ?? false {
-                        log("1 - Load large image replace task was cancelled.")
-                        largeImageLoadQueueLock.unlock()
+                    if isImageCached {
                         return
                     }
                     
-                    //按实际目标分辨率绘制效果较差，观察到1080P屏幕双倍插值后绘制与直接使用原图效果才类似，因此即使scale==1，此处size也不除以2
-                    var largeImage: NSImage?
-                    if resetSize && !forceRefresh {
-                        largeImage=LargeImageProcessor.getImageCache(url: url, size: largeSize, rotate: rotate, ver: file.ver, useOriginalImage: doNotGenResized, isHDR: isHDR)
-                    }else{
-                        if isHDR {
-                            largeImage = getHDRImage(url: url, size: doNotGenResized ? nil : largeSize, rotate: rotate)
-                        }else if doNotGenResized {
-                            largeImage = NSImage(contentsOf: url)?.rotated(by: CGFloat(-90*rotate))
+                    var task: DispatchWorkItem? = nil
+                    task = DispatchWorkItem { [weak self] in
+                        guard let self = self else { return }
+                        if pos != currLargeImagePos && !isThisFromFinder {return}
+                        
+                        largeImageLoadQueueLock.lock()
+                        
+                        if task?.isCancelled ?? false {
+                            log("1 - Load large image replace task was cancelled.")
+                            largeImageLoadQueueLock.unlock()
+                            return
+                        }
+                        
+                        //按实际目标分辨率绘制效果较差，观察到1080P屏幕双倍插值后绘制与直接使用原图效果才类似，因此即使scale==1，此处size也不除以2
+                        var largeImage: NSImage?
+                        if resetSize && !forceRefresh {
+                            largeImage=LargeImageProcessor.getImageCache(url: url, size: largeSize, rotate: rotate, ver: file.ver, useOriginalImage: doNotGenResized, isHDR: isHDR)
                         }else{
-                            largeImage = getResizedImage(url: url, size: largeSize, rotate: rotate)
-                            if largeImage == nil {
-                                lastResizeFailed = true
+                            if isHDR {
+                                largeImage = getHDRImage(url: url, size: doNotGenResized ? nil : largeSize, rotate: rotate)
+                            }else if doNotGenResized {
                                 largeImage = NSImage(contentsOf: url)?.rotated(by: CGFloat(-90*rotate))
+                            }else{
+                                largeImage = getResizedImage(url: url, size: largeSize, rotate: rotate)
+                                if largeImage == nil {
+                                    lastResizeFailed = true
+                                    largeImage = NSImage(contentsOf: url)?.rotated(by: CGFloat(-90*rotate))
+                                }
+                            }
+                        }
+                        
+                        if task?.isCancelled ?? false {
+                            log("2 - Load large image replace task was cancelled.")
+                            largeImageLoadQueueLock.unlock()
+                            return
+                        }
+                        
+                        largeImageLoadQueueLock.unlock()
+                        
+                        if largeImage != nil{
+                            DispatchQueue.main.async { [weak self] in
+                                guard let self = self else { return }
+                                if pos != currLargeImagePos && !isThisFromFinder {return}
+                                if rotate != largeImageView.file.rotate {return}
+                                if largeImageView.file.largeSize != nil && largeSize != largeImageView.file.largeSize {return}
+                                largeImageView.imageView.image=largeImage
+                                //log("replaced")
                             }
                         }
                     }
+                    // 保存新的任务
+                    largeImageLoadTask = task
                     
-                    if task?.isCancelled ?? false {
-                        log("2 - Load large image replace task was cancelled.")
-                        largeImageLoadQueueLock.unlock()
-                        return
-                    }
-                    
-                    largeImageLoadQueueLock.unlock()
-                    
-                    if largeImage != nil{
-                        DispatchQueue.main.async { [weak self] in
-                            guard let self = self else { return }
-                            if pos != currLargeImagePos && !isThisFromFinder {return}
-                            if rotate != largeImageView.file.rotate {return}
-                            if largeImageView.file.largeSize != nil && largeSize != largeImageView.file.largeSize {return}
-                            largeImageView.imageView.image=largeImage
-                            //log("replaced")
-                        }
-                    }
+                    // 在全局队列上异步执行新的任务
+                    DispatchQueue.global(qos: .userInitiated).async(execute: task!)
                 }
-                // 保存新的任务
-                largeImageLoadTask = task
-                
-                // 在全局队列上异步执行新的任务
-                DispatchQueue.global(qos: .userInitiated).async(execute: task!)
-                
             } else if file.type == .video {
                 largeImageView.imageView.isHidden = true
                 largeImageView.playVideo(reload: forceRefresh)
             }
-            
         }
     }
 
