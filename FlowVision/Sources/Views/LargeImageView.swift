@@ -94,7 +94,7 @@ class LargeImageView: NSView {
 //            videoView.allowsVideoFrameAnalysis = false
 //        }
         
-        quickLookView = CustomQLPreviewView(frame: self.bounds, style: .normal)
+        quickLookView = CustomQLPreviewView(frame: self.bounds, style: .compact)
         quickLookView.autostarts = true
         quickLookView.wantsLayer = true
         quickLookView.isHidden = true
@@ -832,6 +832,11 @@ class LargeImageView: NSView {
     }
     
     override func mouseDown(with event: NSEvent) {
+        if file.ext == "pdf" && imageView.frame.contains(event.locationInWindow) {
+            // for handling next/prev button in PDFViewer (QLPreviewView)
+            return
+        }
+        
         getViewController(self)!.publicVar.isLeftMouseDown = true//临时按住左键也能缩放
         
         if !(getViewController(self)!.publicVar.isRightMouseDown),

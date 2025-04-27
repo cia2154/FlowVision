@@ -90,7 +90,7 @@ class CustomCollectionViewItem: NSCollectionViewItem {
         videoView.layer?.cornerRadius = 5.0
         videoView.layer?.addSublayer(avPlayerLayer!)
         
-        quickLookView = CustomQLPreviewView(frame: videoView.bounds, style: .normal)
+        quickLookView = CustomQLPreviewView(frame: videoView.bounds, style: .compact)
         quickLookView?.autostarts = true
         quickLookView?.isHidden = true
         quickLookView?.wantsLayer = true
