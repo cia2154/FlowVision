@@ -94,6 +94,10 @@ class CustomCollectionViewItem: NSCollectionViewItem {
         quickLookView?.autostarts = true
         quickLookView?.isHidden = true
         quickLookView?.wantsLayer = true
+        quickLookView.layer?.borderWidth = 0.0
+        quickLookView.layer?.cornerRadius = 5.0
+        quickLookView.layer?.masksToBounds = true
+        quickLookView.layer?.borderColor = nil
         videoView.addSubview(quickLookView!)
         
         // CustomQLPreviewView can handle mouseDown events, but it is very slow to respond.
@@ -598,10 +602,13 @@ class CustomCollectionViewItem: NSCollectionViewItem {
         let refHeight = view.frame.height - 12.0 - 18.0
         let newWidth = refWidth + 12.0 - 2*style.ThumbnailBorderThickness
         let newHeight = refHeight + 12.0 + 18.0 - 2*style.ThumbnailBorderThickness - tmpFilenamePadding
-        let newFrame = NSRect(x: newX, y: newY, width: newWidth, height: newHeight)
+        let newFrame = NSRect(x: newX, y: newY, width: refWidth, height: refHeight)
         
         imageViewObj.frame = newFrame
         videoView.frame = newFrame
+        
+        // FIXME: check later???
+        quickLookView.frame = NSRect(x: newX - 6.0, y: newY - 24.0, width: refWidth, height: refHeight)
         
         let borderRadius = style.layoutType == .grid ? style.ThumbnailBorderRadiusInGrid : style.ThumbnailBorderRadius
         // 限制圆角半径不超过视图尺寸的一半
@@ -611,6 +618,7 @@ class CustomCollectionViewItem: NSCollectionViewItem {
         view.layer?.masksToBounds = false
         imageViewObj.layer?.cornerRadius = safeRadius
         videoView.layer?.cornerRadius = safeRadius
+        quickLookView.layer?.cornerRadius = safeRadius
         
         var textX = newX
         var textY = round(newX/2)+1 - girdFilenameCompensation
