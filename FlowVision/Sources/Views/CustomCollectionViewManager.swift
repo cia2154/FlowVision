@@ -7,6 +7,7 @@
 
 import Foundation
 import Cocoa
+import Quartz
 
 class CustomCollectionViewManager: NSObject, NSCollectionViewDataSource, NSCollectionViewDelegate, NSCollectionViewDelegateFlowLayout {
     
@@ -45,6 +46,15 @@ class CustomCollectionViewManager: NSObject, NSCollectionViewDataSource, NSColle
     
     func collectionView(_ collectionView: NSCollectionView, didSelectItemsAt indexPaths: Set<IndexPath>) {
         for indexPath in indexPaths{
+            if let item = collectionView.item(at: indexPath) as? CustomCollectionViewItem {
+                let url = URL(string:item.file.path)!
+                if globalVar.HandledAnimatedImageExtensions.contains(url.pathExtension.lowercased()) && item.quickLookView.isHidden {
+                    item.imageViewObj.isHidden = true
+                    item.quickLookView.isHidden = false
+                    item.quickLookView?.previewItem = url as QLPreviewItem
+                }
+            }
+
             //注意：下面这句当item不在视野内时为nil
             //let item = collectionView.item(at: indexPath) as? ImageCollectionViewItem
 //            fileDB.lock()
@@ -59,6 +69,17 @@ class CustomCollectionViewManager: NSObject, NSCollectionViewDataSource, NSColle
     
     func collectionView(_ collectionView: NSCollectionView, didDeselectItemsAt indexPaths: Set<IndexPath>) {
         for indexPath in indexPaths {
+            if let item = collectionView.item(at: indexPath) as? CustomCollectionViewItem {
+                let url = URL(string:item.file.path)!
+                let fileSize: Int = item.file.fileSize ?? -1
+                
+                if globalVar.HandledAnimatedImageExtensions.contains(url.pathExtension.lowercased()) && !item.quickLookView.isHidden && fileSize >= 500 * 1024 {
+                    item.imageViewObj.isHidden = false
+                    item.quickLookView?.isHidden = true
+                    item.quickLookView?.previewItem = nil
+                }
+            }
+            
             //注意：下面这句当item不在视野内时为nil
             //let item = collectionView.item(at: indexPath) as? ImageCollectionViewItem
 //            fileDB.lock()
